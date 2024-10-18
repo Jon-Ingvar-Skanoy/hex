@@ -1,2 +1,11 @@
 GraphTsetlinMachine-master/*
 data/*
+!data/.gitkeep
+
+env/*
+
+graphs/*
+!graphs/.gitkeep
+
+models/*
+!models/.gitkeep
