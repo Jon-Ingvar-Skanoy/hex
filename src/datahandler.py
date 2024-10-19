@@ -5,12 +5,13 @@ import pandas as pd
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
+import re
 
 class DataHandler:
     def __init__(self,
                  paths: dict = None,
                  files: dict = None,
-                 dataset: str = '3x3',
+                 dataset: str = '3x3_0',
                  file_ext: str = '.csv',
                  dataloader: str = 'pd',
                  n_samples: int = 100000,
@@ -44,30 +45,44 @@ class DataHandler:
             self.X_train, self.X_test, self.y_train, self.y_test = self.split_data()
 
 
-    def load_data_files(self, file_ext = None):
+    def load_data_files(self, file_ext=None):
         file_ext = file_ext or self.file_ext
         files = self.paths['data'].glob(f"*{file_ext}")
+        
         for file in files:
-            short_name = file.stem.split('_')[0]
+            filename = file.stem
+
+            base_name = filename.split('_')[0]
+
+            match = re.search(r'_([0-9])$', filename)
+            
+            if match:
+                numeric_suffix = match.group(1)
+                short_name = f"{base_name}_{numeric_suffix}"
+            else:
+                short_name = f"{filename}_0"
+            
             self.files_dict[short_name] = file
         
     def load_data(self, dataloader=None, n_samples=None):
         dataloader = dataloader or self.dataloader
         n_samples = n_samples or self.n_samples
+        filename = self.files_dict[self.files['data']]
         if dataloader == 'pd':
-            self.data = pd.read_csv(self.files_dict[self.files['data']])
+            self.data = pd.read_csv(filename)
             self.headers = self.data.columns.tolist()
         elif dataloader == 'np.genfromtxt':
-            with open(self.files_dict[self.files['data']], 'r') as f:
+            with open(filename, 'r') as f:
                 self.headers = f.readline().strip().split(',')
 
-            self.data = np.genfromtxt(self.files_dict[self.files['data']],
+            self.data = np.genfromtxt(filename,
                                       delimiter=',',
                                       skip_header=1,
                                       dtype=np.int32,
                                       max_rows=n_samples*2)
         else:
             raise ValueError(f"Invalid dataloader: {dataloader}")
+        self.dataset = self.files['data']
         
     def prepare_data(self):
         if self.dataloader == 'pd':
@@ -145,7 +160,10 @@ class DataHandler:
         y_train = y_train or self.y_train
         X_test = X_test or self.X_test
         y_test = y_test or self.y_test
-        output_file = output_file or f"{self.paths['graphs']}/graphs_{self.dataset}_{self.n_samples}.pkl"
+        if output_file:
+            output_file = f"{self.paths['graphs']}/{output_file}"
+        else:
+            output_file = f"{self.paths['graphs']}/graphs_{self.dataset}_{self.n_samples}.pkl"
 
         with open(output_file, 'wb') as f:
             pickle.dump((graphs_train, graphs_test, X_train, y_train, X_test, y_test), f)
