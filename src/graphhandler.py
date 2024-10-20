@@ -168,19 +168,19 @@ class GraphHandler:
                     self.graphs.add_graph_node_property(graph_id, node_id, 'RIGHT')
                 if node_id == self.left_index:
                     neighbors = [i for i in range(0, self.board_size*self.board_size, self.board_size)]
-                    edge_type = 0
+                    edge_type = 1
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
                     self.graphs.add_graph_node_property(graph_id, node_id, 'LEFT')
                 if node_id == self.down_index:
                     neighbors = [i for i in range(self.board_size**2-self.board_size, self.board_size**2, 1)]
-                    edge_type = 0
+                    edge_type = 2
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
                     self.graphs.add_graph_node_property(graph_id, node_id, 'DOWN')
                 if node_id == self.up_index:
                     neighbors = [i for i in range(self.board_size)]
-                    edge_type = 0
+                    edge_type = 3
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
                     self.graphs.add_graph_node_property(graph_id, node_id, 'UP')
