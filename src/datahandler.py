@@ -11,10 +11,10 @@ class DataHandler:
     def __init__(self,
                  paths: dict = None,
                  files: dict = None,
-                 dataset: str = '3x3_0',
+                 dataset: str = '3x3_2000_40_0',
                  file_ext: str = '.csv',
                  dataloader: str = 'pd',
-                 n_samples: int = 100000,
+                 n_samples: int = 1000,
                  balance_data: bool = True,
                  perform_split: bool = True):
         
@@ -51,23 +51,35 @@ class DataHandler:
         
         for file in files:
             filename = file.stem
-
-            base_name = filename.split('_')[0]
-
-            match = re.search(r'_([0-9])$', filename)
+            # Regular expression to capture board_size, samples, op, and mbf
+            match = re.match(r'(\d+x\d+)_(\d+)_(\d+)_(\d+)', filename)
             
             if match:
-                numeric_suffix = match.group(1)
-                short_name = f"{base_name}_{numeric_suffix}"
+                board_size = match.group(1)  # e.g., "3x3" or "17x17"
+                samples = int(match.group(2))  # e.g., "2000" or "200000"
+                op = int(match.group(3))  # e.g., "40" or "60"
+                mbf = int(match.group(4))  # e.g., "2" or "5"
+                
+                # Create a dictionary entry for this file
+                self.files_dict[filename] = {
+                    'board_size': board_size,
+                    'samples': samples,
+                    'op': op,
+                    'mbf': mbf,
+                    'file_path': file  # Store the actual path to the file
+                }
             else:
-                short_name = f"{filename}_0"
-            
-            self.files_dict[short_name] = file
+                print(f"Filename {filename} does not match the expected pattern")
         
     def load_data(self, dataloader=None, n_samples=None):
         dataloader = dataloader or self.dataloader
         n_samples = n_samples or self.n_samples
-        filename = self.files_dict[self.files['data']]
+        filename = self.files_dict.get(self.files.get('data'), None)
+        if filename is None:
+            raise ValueError(f"Dataset {self.files.get('data', 'UNKNOWN')} not found in files_dict.")
+        else:
+            filename = filename['file_path']
+            
         if dataloader == 'pd':
             self.data = pd.read_csv(filename)
             self.headers = self.data.columns.tolist()
