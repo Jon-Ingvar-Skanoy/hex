@@ -33,13 +33,14 @@ class DataHandler:
 
         self.X = None
         self.y = None
+        self.starting_player = None
 
         self.load_data_files(self.file_ext)
         self.load_data()
         self.prepare_data()
 
         if balance_data:
-            self.X, self.y = self.balance_data(self.X, self.y, self.n_samples)
+            self.X, self.y, self.starting_player = self.balance_data(self.X, self.y, self.starting_player, self.n_samples)
         
         if perform_split:
             self.X_train, self.X_test, self.y_train, self.y_test = self.split_data()
@@ -98,47 +99,50 @@ class DataHandler:
         
     def prepare_data(self):
         if self.dataloader == 'pd':
-            X = self.data.iloc[:, :-1]
-            y = self.data.iloc[:, -1]
+            # Expecting starting_player as the second-to-last column, winner as the last
+            X = self.data.iloc[:, :-2]  # All columns except the last two (starting_player and winner)
+            self.starting_player = self.data.iloc[:, -2].values  # Second-to-last column
+            y = self.data.iloc[:, -1]  # Last column is winner
             self.X = X.values
             self.y = y.values
         elif self.dataloader == 'np.genfromtxt':
-            X = self.data[:, :-1]
+            # NumPy data format with "starting_player" as the second-to-last column
+            X = self.data[:, :-2]
+            self.starting_player = self.data[:, -2]
             y = self.data[:, -1]
             self.X = X
             self.y = y
 
-    def balance_data(self, X=None, y=None, n_samples=None):
+    def balance_data(self, X=None, y=None, starting_player=None, n_samples=None):
         X = self.X if X is None else X
         y = self.y if y is None else y
+        starting_player = self.starting_player if starting_player is None else starting_player
         n_samples = n_samples or self.n_samples
-        class_counts = np.bincount(y)
-        majority_class = np.argmax(class_counts)
-        minority_class = np.argmin(class_counts)
-
-        X_majority = X[y == majority_class]
-        X_minority = X[y == minority_class]
-
-        n_samples_per_class = n_samples // 2
-
-        X_majority_downsampled, y_majority_downsampled = resample(
-            X_majority, y[y == majority_class],
-            replace=False,  
-            n_samples=n_samples_per_class, 
-            random_state=42 
-        )
-
-        X_minority_downsampled, y_minority_downsampled = resample(
-            X_minority, y[y == minority_class],
-            replace=False,  
-            n_samples=n_samples_per_class, 
-            random_state=42  
-        )
-
-        X_resampled = np.vstack((X_majority_downsampled, X_minority_downsampled))
-        y_resampled = np.hstack((y_majority_downsampled, y_minority_downsampled))
-
-        return X_resampled, y_resampled
+        
+        # Identify unique class combinations based on starting_player and winner
+        indices = [(starting_player == sp) & (y == wy) for sp in np.unique(starting_player) for wy in np.unique(y)]
+        
+        # Resample each class to ensure balanced starting player and outcome
+        balanced_X, balanced_y, balanced_sp = [], [], []
+        n_samples_per_class = n_samples // len(indices)
+        for condition in indices:
+            current_size = np.sum(condition)
+            replace = current_size < n_samples_per_class
+            X_resampled, y_resampled, sp_resampled = resample(
+                X[condition], y[condition], starting_player[condition],
+                replace=replace,
+                n_samples=n_samples_per_class,
+                random_state=42
+            )
+            balanced_X.append(X_resampled)
+            balanced_y.append(y_resampled)
+            balanced_sp.append(sp_resampled)
+        
+        self.X = np.vstack(balanced_X)
+        self.y = np.hstack(balanced_y)
+        self.starting_player = np.hstack(balanced_sp)
+        
+        return self.X, self.y, self.starting_player
     
     def split_data(self, X=None, y=None, test_size=0.2):
         X = self.X if X is None else X
@@ -149,6 +153,7 @@ class DataHandler:
         print(f"Data shape: {self.data.shape}")
         print(f"X shape: {self.X.shape}")
         print(f"y shape: {self.y.shape}")
+        print(f"Starting player shape: {self.starting_player.shape}")
         print(f"Headers: {self.headers}")
         if self.perform_split:
             print(f"X_train shape: {self.X_train.shape}")
@@ -157,7 +162,8 @@ class DataHandler:
             print(f"y_test shape: {self.y_test.shape}")
 
     def get_class_distribution(self):
-        return np.bincount(self.y)
+        unique, counts = np.unique(self.y, axis=0, return_counts=True)
+        return dict(zip([f"{sp}-{w}" for sp, w in unique], counts))
 
     def save_graphs(self,
                     graphs_train,
