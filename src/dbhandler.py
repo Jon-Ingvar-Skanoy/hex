@@ -4,6 +4,7 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+import boto3
 import optuna
 
 class DBHandler:
@@ -11,18 +12,44 @@ class DBHandler:
         # Load environment variables for database credentials
         load_dotenv()
         self.db_host = os.getenv("DB_HOST")
-        self.db_port = os.getenv("DB_PORT")
+        self.db_port = os.getenv("DB_PORT", 5432)
         self.db_user = os.getenv("DB_USER")
         self.db_password = os.getenv("DB_PASSWORD")
+        self.region = os.getenv("AWS_DEFAULT_REGION")
         self.db_name = os.getenv("DB_NAME")
+
+        self.db_password = self.generate_auth_token()
+        
         
         self.engine = create_engine(f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}")
         self.target_storage_url = f"postgresql+psycopg2://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
     
+    def generate_auth_token(self):
+        """Generates an IAM token to authenticate with RDS using boto3."""
+        rds_client = boto3.client("rds", region_name=self.region)
+        auth_token = rds_client.generate_db_auth_token(
+            DBHostname=self.db_host,
+            Port=int(self.db_port),
+            DBUsername=self.db_user
+        )
+        return auth_token
+    
+    def refresh_connection(self):
+        """Refresh the database connection with a new IAM token."""
+        self.db_password = self.generate_auth_token()
+        self.engine = create_engine(f"postgresql+psycopg2://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}")
+
     def execute_query(self, query):
         """Executes a query and returns a DataFrame."""
-        with self.engine.connect() as connection:
-            return pd.read_sql_query(query, connection)
+        try:
+            with self.engine.connect() as connection:
+                return pd.read_sql_query(query, connection)
+        except Exception as e:
+            print(f"Error executing query: {e}")
+            # Refresh IAM token if needed and retry
+            self.refresh_connection()
+            with self.engine.connect() as connection:
+                return pd.read_sql_query(query, connection)
 
     def load_study(self, study_name, storage_url):
         """Loads a study from a specified storage URL."""
