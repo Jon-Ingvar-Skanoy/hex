@@ -164,6 +164,19 @@ class DataHandler:
     def get_class_distribution(self):
         unique, counts = np.unique(self.y, axis=0, return_counts=True)
         return dict(zip([f"{sp}-{w}" for sp, w in unique], counts))
+    
+    def count_unique_games(self):
+        """
+        Count and return the number of unique games in the dataset.
+        Assumes that each row in self.X represents a single game.
+        """
+        if self.X is None:
+            raise ValueError("Data has not been loaded or prepared.")
+        
+        unique_games = np.unique(self.X, axis=0)  # Find unique rows in X
+        num_unique_games = unique_games.shape[0]  # Count unique rows
+        
+        return num_unique_games
 
     def save_graphs(self,
                     graphs_train,
