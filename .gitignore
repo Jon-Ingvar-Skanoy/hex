@@ -1,3 +1,4 @@
+aws/*
 GraphTsetlinMachine-master/*
 data/*
 !data/.gitkeep
@@ -9,6 +10,8 @@ graphs/*
 
 models/*
 !models/.gitkeep
+
+results/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
