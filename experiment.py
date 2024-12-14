@@ -1,21 +1,16 @@
+import time
 import pickle
-from GraphTsetlinMachine.graphs import Graphs
 import numpy as np
-from GraphTsetlinMachine.tm import MultiClassGraphTsetlinMachine, CommonTsetlinMachine
-import optuna
-from optuna.exceptions import TrialPruned
 from sklearn.metrics import f1_score, precision_score, recall_score
+from GraphTsetlinMachine.graphs import Graphs
+from GraphTsetlinMachine.tm import MultiClassGraphTsetlinMachine, CommonTsetlinMachine
 
 with open('data.pkl', 'rb') as f:
     graphs_train, graphs_test, X_train, Y_train, X_test, Y_test = pickle.load(f)
 
-
-
-
-
 number_of_clauses = 3500
 T = number_of_clauses*1.5971422963103452
-depth = 2
+depth = 3
 s = 1
 message_size = 64
 message_bits = 3
@@ -25,39 +20,26 @@ epochs = 20
 state_bits = 8
 max_literals = 20
 
-
-
-
-  
-
-
-    # Initialize the Tsetlin machine with suggested hyperparameters
 tm = MultiClassGraphTsetlinMachine(
-        number_of_clauses, T, s, depth=depth, message_size=message_size,
-        message_bits=message_bits, number_of_state_bits=state_bits, boost_true_positive_feedback=1,
-        max_included_literals=max_literals,
-   
-        grid=(16*13,1,1),
-        block=(128,1,1)
+    number_of_clauses, T, s, depth=depth, message_size=message_size,
+    message_bits=message_bits, number_of_state_bits=state_bits, boost_true_positive_feedback=1,
+    max_included_literals=max_literals,
+    grid=(16*13,1,1),
+    block=(128,1,1)
+)
 
-
-    )
-
-    
-for variant in [1, 2, 3, 5,10]:   
-
-    depth = variant 
+for variant in [5, 10, 20, 100, None]:   
+    max_included_literals = variant 
 
     ac_test_list = []
     ac_train_list = []
     f1_test_list = []
     precition_test_list = []
     recall_test_list = []
-
+    runtime_list = []
 
     for run in range(5):
-
-        print("Depth: %d, Run: %d" % (depth, run))
+        print("Param: %d, Run: %d" % (variant, run))
 
         # Initialize the Tsetlin machine with suggested hyperparameters
         tm = MultiClassGraphTsetlinMachine(
@@ -68,27 +50,15 @@ for variant in [1, 2, 3, 5,10]:
             block=(128,1,1)
         )
 
-        
-
-
-        
-    
-
-
-
+        start_time = time.time()
         for i in range(epochs):
             # Train the model
             tm.fit(graphs_train, Y_train, epochs=1, incremental=True)
-
-                # Compute accuracy on test and training data
+            # Optional: print intermediate test accuracy
             result_test = 100 * (tm.predict(graphs_test) == Y_test).mean()
-
             print(result_test)
-            #    result_train = 100 * (tm.predict(graphs_train) == Y_train).mean()
+        end_time = time.time()
 
-                # Report intermediate result and prune trial if not promising
-
-        
         prediciton = tm.predict(graphs_test)
 
         ac_test = 100 * (prediciton == Y_test).mean()
@@ -102,12 +72,16 @@ for variant in [1, 2, 3, 5,10]:
         f1_test_list.append(f1_test)
         precition_test_list.append(precision_test)
         recall_test_list.append(recall_test)
+        runtime_list.append(end_time - start_time)
 
-       with open("results.txt", "a") as f:
-            f.write("Depth: %d, Run: %d, Train Accuracy: %.2f, Test Accuracy: %.2f, F1: %.2f, Precision: %.2f, Recall: %.2f\n" % (depth, run, ac_train, ac_test, f1_test, precision_test, recall_test))
+    with open("results.txt", "a") as f:
+        f.write("Param: %d, Depth: %d, Test Accuracy Mean: %.4f (std: %.4f), F1 Mean: %.4f (std: %.4f), Precision Mean: %.4f (std: %.4f), Recall Mean: %.4f (std: %.4f), Train Accuracy Mean: %.4f (std: %.4f), Time Mean: %.4f (std: %.4f)\n" % 
+                (variant, depth, 
+                 np.mean(ac_test_list), np.std(ac_test_list),
+                 np.mean(f1_test_list), np.std(f1_test_list),
+                 np.mean(precition_test_list), np.std(precition_test_list),
+                 np.mean(recall_test_list), np.std(recall_test_list),
+                 np.mean(ac_train_list), np.std(ac_train_list),
+                 np.mean(runtime_list), np.std(runtime_list)))
 
-    print("Depth: %d, Test Accuracy Mean: %.2f, Test Accuracy Std: %.2f" % (depth, np.mean(ac_test_list), np.std(ac_test_list)))
-
-
-     
-
+    print("Depth: %d, Param: %d, Test Accuracy Mean: %.2f, Test Accuracy Std: %.2f" % (depth, variant, np.mean(ac_test_list), np.std(ac_test_list)))
