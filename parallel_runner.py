@@ -9,8 +9,8 @@ if __name__ == "__main__":
     
     # Parameter grids
     board_sizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    sample_sizes = [1000, 10000]
-    number_of_clauses_list = [1000, 10000]
+    sample_sizes = [1000]
+    number_of_clauses_list = [1000, 10000, 100000]
     s_values = [1.0] # 0.5, , 2.0
     T_ratios = [0.8]  # 1.2
     q_values = [1.0] #0.5, 
