@@ -13,7 +13,7 @@ class DataHandler:
                  files: dict = None,
                  dataset: str = '3x3_2000_40_0',
                  file_ext: str = '.csv',
-                 dataloader: str = 'pd',
+                 dataloader: str = 'np.genfromtxt',
                  n_samples: int = 1000,
                  balance_data: bool = True,
                  perform_split: bool = True):
@@ -161,8 +161,23 @@ class DataHandler:
             print(f"X_test shape: {self.X_test.shape}")
             print(f"y_test shape: {self.y_test.shape}")
 
-    def get_class_distribution(self):
-        unique, counts = np.unique(self.y, axis=0, return_counts=True)
+    def get_class_distribution(self, data="train", after_split=False):
+        if data == "train":
+            if after_split:
+                y = self.y_train
+            else:
+                y = self.y
+        elif data == "test":
+            if after_split:
+                y = self.y_test
+            else:
+                y = self.y
+        else:
+            raise ValueError(f"Invalid data: {data}")
+        
+        unique, counts = np.unique(y, return_counts=True)
+        if len(unique.shape) == 1:
+            return dict(zip(map(str, unique), counts))
         return dict(zip([f"{sp}-{w}" for sp, w in unique], counts))
     
     def count_unique_games(self):
