@@ -41,7 +41,7 @@ class GraphHandler:
         self.board_size = board_size
         self.data_array = data_array
         self.n_nodes = board_size**2
-        self.symbols = ['RED', 'BLUE','UP', 'DOWN', 'RIGHT','LEFT'] if symbols is None else symbols
+        self.symbols = ['RED', 'BLUE', 'UP', 'DOWN', 'RIGHT','LEFT'] if symbols is None else symbols
 
         for i in range(board_size):
             self.symbols.append(f'ROW_{i}')
@@ -88,54 +88,38 @@ class GraphHandler:
         connections = []
         directions = []
 
+        # Helper function to add connections
+        def add_connection(node, direction):
+            connections.append(node)
+            directions.append(direction)
+
         # Upper connections
         if y > 0:
-            connections.append(x + (y - 1) * self.board_size)  # Directly above
-            directions.append(Direction.UP)
-            if y % 2 == 0 and x > 0:  # Even row: diagonal left
-                connections.append(x - 1 + (y - 1) * self.board_size)
-                directions.append(Direction.UP_LEFT)
-            elif y % 2 == 1 and x < self.board_size - 1:  # Odd row: diagonal right
-                connections.append(x + 1 + (y - 1) * self.board_size)
-                directions.append(Direction.UP_RIGHT)
-            else:
-                connections.append(self.up_index)
-                directions.append(Connection.EDGE_UP)
+            add_connection(index - self.board_size, Direction.UP)
+            if x < self.board_size - 1: 
+                add_connection(index - self.board_size + 1, Direction.UP_RIGHT)
         else:
-            connections.append(self.up_index)
-            directions.append(Connection.EDGE_UP)
+            add_connection(self.up_index, Connection.EDGE_UP)
 
         # Left and right connections
         if x > 0:
-            connections.append(x - 1 + y * self.board_size)
-            directions.append(Direction.LEFT)
+            add_connection(index - 1, Direction.LEFT)
         else:
-            connections.append(self.left_index)
-            directions.append(Connection.EDGE_LEFT)
+            add_connection(self.left_index, Connection.EDGE_LEFT)
 
+        # Right connections
         if x < self.board_size - 1:
-            connections.append(x + 1 + y * self.board_size)
-            directions.append(Direction.RIGHT)
+            add_connection(index + 1, Direction.RIGHT)
         else:
-            connections.append(self.right_index)
-            directions.append(Connection.EDGE_RIGHT)
+            add_connection(self.right_index, Connection.EDGE_RIGHT)
 
         # Lower connections
         if y < self.board_size - 1:
-            connections.append(x + (y + 1) * self.board_size)
-            directions.append(Direction.DOWN)
-            if y % 2 == 0 and x > 0:  # Even row: diagonal left
-                connections.append(x - 1 + (y + 1) * self.board_size)
-                directions.append(Direction.DOWN_LEFT)
-            elif y % 2 == 1 and x < self.board_size - 1:  # Odd row: diagonal right
-                connections.append(x + 1 + (y + 1) * self.board_size)
-                directions.append(Direction.DOWN_RIGHT)
-            else:
-                connections.append(self.down_index)
-                directions.append(Connection.EDGE_DOWN)
+            add_connection(index + self.board_size, Direction.DOWN)
+            if x > 0:
+                add_connection(index + self.board_size - 1, Direction.DOWN_LEFT)
         else:
-            connections.append(self.down_index)
-            directions.append(Connection.EDGE_DOWN)
+            add_connection(self.down_index, Connection.EDGE_DOWN)
 
         return connections, directions
 
@@ -185,25 +169,25 @@ class GraphHandler:
                     edge_type = Connection.EDGE_RIGHT
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
-                    self.graphs.add_graph_node_property(graph_id, node_id, 'RIGHT')
+                    self.graphs.add_graph_node_property(graph_id, node_id, "RIGHT")
                 if node_id == self.left_index:
                     neighbors = [i for i in range(0, self.board_size**2, self.board_size)]
                     edge_type = Connection.EDGE_LEFT
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
-                    self.graphs.add_graph_node_property(graph_id, node_id, 'LEFT')
+                    self.graphs.add_graph_node_property(graph_id, node_id, "LEFT")
                 if node_id == self.down_index:
                     neighbors = [i for i in range(self.board_size**2-self.board_size, self.board_size**2, 1)]
                     edge_type = Connection.EDGE_DOWN
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
-                    self.graphs.add_graph_node_property(graph_id, node_id, 'DOWN')
+                    self.graphs.add_graph_node_property(graph_id, node_id, "DOWN")
                 if node_id == self.up_index:
                     neighbors = [i for i in range(self.board_size)]
                     edge_type = Connection.EDGE_UP
                     for neighbor_id in neighbors:
                         self.graphs.add_graph_node_edge(graph_id, node_id, neighbor_id, edge_type)
-                    self.graphs.add_graph_node_property(graph_id, node_id, 'UP')
+                    self.graphs.add_graph_node_property(graph_id, node_id, "UP")
         
     def encode(self):
         print("Encoding graphs") if self.verbose_level > 1 else None
