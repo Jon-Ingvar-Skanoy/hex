@@ -17,13 +17,13 @@ if __name__ == "__main__":
     depth_values = [1] #, 2, 3
     delay = 2
 
-    max_concurrent_processes = 20
+    max_concurrent_processes = 12
 
     # Ensure logs directory exists
     os.makedirs("logs", exist_ok=True)
 
     
-    exp_name = "initial"
+    experiment_name = "initial"
     open_position = 40
     moves_before = 0
     message_size = 128
@@ -45,17 +45,17 @@ if __name__ == "__main__":
         param_str = f"b{board_size}_samp{sample_size}_c{number_of_clauses}_T{T}_s{s}_q{q}_d{depth}"
         dh_string = "dh2" if double_hashing else "dh1"
 
-        log_file_path = f"logs/{exp_name}_{param_str}_{dh_string}.log"
-        result_file_path = f"results/experiments/{exp_name}_{param_str}_{dh_string}.txt"
+        log_file_path = f"logs/{experiment_name}_{param_str}_{dh_string}.log"
+        result_file_path = f"results/experiments/{experiment_name}_{param_str}_{dh_string}.txt"
 
         if os.path.exists(log_file_path) or os.path.exists(result_file_path):
             print(f"Skipping already processed combination: {param_str}")
             continue
         
         command = [
-            "python", "exp_initial.py",
+            "python", f"experiment_{experiment_name}.py",
             "--board_size", str(board_size),
-            "--exp_name", str(exp_name),
+            "--exp_name", str(experiment_name),
             "--sample_size", str(sample_size),
             "--open_position", str(open_position),
             "--moves_before", str(moves_before),
@@ -113,17 +113,17 @@ if __name__ == "__main__":
         param_str = f"b{board_size}_samp{sample_size}_c{number_of_clauses}_T{T}_s{s}_q{q}_d{depth}"
         dh_string = "dh2" if double_hashing else "dh1"
 
-        log_file_path = f"logs/{exp_name}_{param_str}_{dh_string}.log"
-        result_file_path = f"results/experiments/{exp_name}_{param_str}_{dh_string}.txt"
+        log_file_path = f"logs/{experiment_name}_{param_str}_{dh_string}.log"
+        result_file_path = f"results/experiments/{experiment_name}_{param_str}_{dh_string}.txt"
 
         if os.path.exists(log_file_path) or os.path.exists(result_file_path):
             print(f"Skipping already processed combination: {param_str}")
             continue
         
         command = [
-            "python", "exp_initial.py",
+            "python", f"experiment_{experiment_name}.py",
             "--board_size", str(board_size),
-            "--exp_name", str(exp_name),
+            "--exp_name", str(experiment_name),
             "--sample_size", str(sample_size),
             "--open_position", str(open_position),
             "--moves_before", str(moves_before),
