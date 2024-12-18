@@ -23,7 +23,7 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
-def main(board_size, exp_name, sample_size, open_position, moves_before, message_size, message_bits, double_hashing, epochs, number_of_clauses, T, s, q, depth):
+def main(board_size, experiment_name, sample_size, open_position, moves_before, message_size, message_bits, double_hashing, epochs, number_of_clauses, T, s, q, depth):
 
     # "dh2": "double-hash", "dh1": "single-hash?" or "no-hash"
     dh_string = "dh2" if double_hashing else "dh1"
@@ -102,7 +102,7 @@ def main(board_size, exp_name, sample_size, open_position, moves_before, message
         param_filename = f"{param_str}_{dh_string}"
 
         # Write results to file
-        with open(f"results/experiments/{exp_name}_{param_filename}.txt", "a") as f:
+        with open(f"results/experiments/{experiment_name}_{param_filename}.txt", "a") as f:
             f.write("Run: %d, Train Accuracy: %.2f, Test Accuracy: %.2f, F1: %.2f, Precision: %.2f, Recall: %.2f, Elapsed Time: %.2f\n" % (
                 run, acc_train, acc_test, f1_test, precision_test, recall_test, elapsed_time
             ))
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     # Add arguments
     parser.add_argument("--board_size", type=int, required=True, help="The size of the board (e.g., 4, 5, 6).")
-    parser.add_argument("--exp_name", type=str, default="", help="Experiment name (default: '').")
+    parser.add_argument("--experiment_name", type=str, default="", help="Experiment name (default: '').")
     parser.add_argument("--sample_size", type=int, default=1000, help="Number of samples to use (e.g., 1000).")
     parser.add_argument("--open_position", type=int, default=40, help="Percentage of open positions (default: 40).")
     parser.add_argument("--moves_before", type=int, default=0, help="Moves before win (default: 0).")
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     # Run the main function
     main(
         board_size=args.board_size,
-        exp_name=args.exp_name,
+        experiment_name=args.experiment_name,
         sample_size=args.sample_size,
         open_position=args.open_position,
         moves_before=args.moves_before,

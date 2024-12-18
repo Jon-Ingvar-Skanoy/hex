@@ -55,7 +55,7 @@ if __name__ == "__main__":
         command = [
             "python", f"experiment_{experiment_name}.py",
             "--board_size", str(board_size),
-            "--exp_name", str(experiment_name),
+            "--experiment_name", str(experiment_name),
             "--sample_size", str(sample_size),
             "--open_position", str(open_position),
             "--moves_before", str(moves_before),
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         command = [
             "python", f"experiment_{experiment_name}.py",
             "--board_size", str(board_size),
-            "--exp_name", str(experiment_name),
+            "--experiment_name", str(experiment_name),
             "--sample_size", str(sample_size),
             "--open_position", str(open_position),
             "--moves_before", str(moves_before),
