@@ -9,7 +9,7 @@ if __name__ == "__main__":
     
     # Parameter grids
     board_sizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    sample_sizes = [1000]
+    sample_sizes = [1000, 10000]
     number_of_clauses_list = [1000, 10000, 100000]
     s_values = [1.0] # 0.5, , 2.0
     T_ratios = [0.8]  # 1.2
@@ -17,13 +17,13 @@ if __name__ == "__main__":
     depth_values = [1] #, 2, 3
     delay = 2
 
-    max_concurrent_processes = 20
+    max_concurrent_processes = 12
 
     # Ensure logs directory exists
     os.makedirs("logs", exist_ok=True)
 
     
-    exp_name = "baseline"
+    exp_name = "initial"
     # sample_size = 10000
     open_position = 40
     moves_before = 0
@@ -54,14 +54,14 @@ if __name__ == "__main__":
             continue
         
         command = [
-            "python", "exp_baseline.py",
+            "python", "experiment_initial.py",
             "--board_size", str(board_size),
-            "--exp_name", str(exp_name),
+            "--experiment_name", str(exp_name),
             "--sample_size", str(sample_size),
             "--open_position", str(open_position),
             "--moves_before", str(moves_before),
             "--message_size", str(message_size),
-            "--message_bits_ratio", str(message_bits_ratio),
+            "--message_bits", str(message_bits_ratio),
             "--double_hashing", str(double_hashing),
             "--epochs", "150",
             "--number_of_clauses", str(number_of_clauses),
